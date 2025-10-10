@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Details for {{ project.name }}</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+<div class="float-right">Last update: <time class="timeago" datetime="{{lastupdate}}">{{ lastupdate }}</time></div>
+  <h1>Details for {{ project.name }}</h1>
+
+  <p><strong>State:</strong> {{ project.state }}</p>
+
+  <h2>Requests</h2>
+  {% if project.staged_requests %}
+        <strong>Staged:</strong> {{ project.staged_requests | length }}
+        <strong>Untracked:</strong> {{ project.untracked_requests }}
+        <strong>Obsolete:</strong> {{ project.obsolete_requests | length}}
+    <ul>
+      {% for req in project.staged_requests %}
+        <li>
+          <a href="https://build.opensuse.org/requests/{{ req.id }}" target="_blank">
+            {{ req.package }} ({{ req.id }})
+          </a> by {{ req.creator }} — {{ req.state }}
+
+            {% if req.reviews %}
+              <details>
+                <summary>{{ req.reviews | length }} missing reviews</summary>
+                <ul>
+                  {% for review in req.reviews %}
+                    <li>
+                      {% if review.by_user %}by user {{ review.by_user }}{% endif %}
+                      {% if review.by_group %}by group {{ review.by_group }}{% endif %}
+                      {% if review.by_package %}by package {{ review.by_package }}{% endif %}
+                      {% if review.by_project %}by project {{ review.by_project }}{% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </details>
+            {% endif %}
+
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No staged requests.</p>
+  {% endif %}
+
+  <h2>Stats</h2>
+  <p>
+    <ul>
+      <li><strong>Broken packages:</strong> {{ project.broken_packages | length }}</li>
+      <li><strong>Missing reviews:</strong> {{ project.missing_reviews | length }}</li>
+      <li><strong>Missing checks:</strong> {{ project.missing_checks | length }}</li>
+    </ul>
+  <p>
+
+  <h2>Broken Packages</h2>
+  {% if project.broken_packages %}
+    <ul>
+      {% for package in project.broken_packages %}
+        <li>
+          Package {{ package.package }} — Arch: {{ package.arch }} — Stage: {{ package.state }} — Repository : {{ package.repository }} - Project: {{ package.project }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No broken packages.</p>
+  {% endif %}
+
+  <h2>Checks</h2>
+  {% if project.checks %}
+    <ul>
+      {% for check in project.checks %}
+        <li>
+          {{ check.name }} — {{ check.state }}
+          {% if check.url %} [<a href="{{ check.url }}" target="_blank">Link</a>] {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No checks.</p>
+  {% endif %}
+
+  <h2>Missing Checks</h2>
+  {% if project.missing_checks%}
+    <ul>
+      {% for check in project.missing_checks %}
+        <li>
+          {{ check.name }} — {{ check.state }}
+          {% if check.url %} [<a href="{{ check.url }}" target="_blank">Link</a>] {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No checks.</p>
+  {% endif %}
+
+  <h2>Building Repositories</h2>
+  {% if project.building_repositories %}
+    <ul>
+      {% for repo in project.building_repositories %}
+        <li>
+          {{ repo.name }} ({{ repo.arch }}) — {{ repo.state }} — To build: {{ repo.to_build }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No active repositories.</p>
+  {% endif %}
+
+  <p><a href="staging.html">&larr; Back to dashboard</a></p>
+</div>
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.7/jquery.timeago.min.js" integrity="sha256-0+5OfvOxkLHqpLPPwy9pDjug8N3cwaqcmleaxnR5VS8=" crossorigin="anonymous"></script>
+  <script>
+    jQuery(document).ready(function() {
+      jQuery("time.timeago").timeago();
+    });
+  </script>
+</body>
+</html>

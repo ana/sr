@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <title>Staging for openSUSE:Factory</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+
+<body>
+<div class="col-3 text-right">Last update: <time class="timeago" datetime="{{lastupdate}}">{{ lastupdate }}</time></div>
+
+<div class="container-xxl py-4">
+    <div class="card">
+        <div class="card-body">
+     <h3 class="mb-4">Dashboard for {{ projectname }}</h3>
+
+            <table class="table table-bordered table-hover table-sm table-responsive w-100">
+                <thead class="text-center">
+                <tr>
+                    <th>Staging Project</th>
+                    <th>Requests</th>
+                    <th>Problems</th>
+                </tr>
+                </thead>
+                <tbody>
+      {% for project in projects %}
+      <tr>
+          <td class="project">
+
+            {% set btn_class = "btn-success" %}
+            {% if project.state == "review" %}
+              {% set btn_class = "btn-primary" %}
+            {% elif project.state == "testing" %}
+              {% set btn_class = "btn-info" %}
+            {% elif project.state == "building" %}
+              {% set btn_class = "btn-warning" %}
+            {% elif project.state == "failed" %}
+              {% set btn_class = "btn-danger" %}
+            {% elif project.state == "unacceptable" %}
+              {% set btn_class = "btn-dark" %}
+            {% endif %}
+
+            <a href="staging_{{ project.name }}.html"
+              target="_blank"
+              class="btn {{ btn_class }}"
+              role="button">
+              <span class="badge bg-white text-primary px-3 py-1 fs-5">
+                {{ project.name }}
+              </span>
+              {{ project.state }}
+            </a>
+          </td>
+        <td class="requests">
+
+          {% if project.staged_requests %}
+
+            <ul>
+              {% for req in project.staged_requests %}
+
+                  {% set btn_class = "btn-success" %}
+
+                  {# Set button class based on request state #}
+                  {% if req.state == "revoked" or req.state == "declined" %}
+                    {% set btn_class = "btn-secondary" %}
+                  {% elif req.state == "superseded" %}
+                    {% set btn_class = "btn-warning" %}
+                  {% elif req.reviews %}
+                    {# Set to btn-primary if reviews exist #}
+                    {% set btn_class = "btn-primary" %}
+                  {% endif %}
+
+                  <a href="https://build.opensuse.org/requests/{{ req.id }}"
+                    target="_blank"
+                    class="btn {{ btn_class }} btn-sm m-1"
+                    role="button"
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    title="Creator: {{ req.creator }}&#10;Updated: {{ req.updated }}&#10;">
+                    {% if req.type == "delete" %}
+                      <del>{{ req.package }} ({{ req.id }}) </del>
+                    {% else %}
+                      {{ req.package }} ({{ req.id }})
+                    {% endif %}
+
+                    {# Add the reviews icon if reviews exist #}
+                    {% if req.reviews %}
+                      {% for review in req.reviews %}
+                      {% if review.by_user %}{% set tooltip_title = "by user: " ~ review.by_user %}<i class="bi bi-person-circle" title="{{ tooltip_title }}"></i>{% endif %}
+                      {% if review.by_group %}{% set tooltip_title = "by group: " ~ review.by_group %}<i class="bi bi-people-fill" title="{{ tooltip_title }}"></i>{% endif %}
+                      {% if review.by_package %}{% set tooltip_title = "by package: " ~ review.by_package %}<i class="bi bi-archive-fill" title="{{ tooltip_title }}"></i>{% endif %}
+                      {% if review.by_project %}{% set tooltip_title = "by project: " ~ review.by_project %}<i class="bi bi-boxes" title="{{ tooltip_title }}"></i>{% endif %}
+                    {% endfor %}
+                    {% endif %}
+                  </a>
+
+              {% endfor %}
+            </ul>
+          {% endif %}
+<!--          {% if project.staged_requests %}
+            {% for req in project.staged_requests %}
+              {% if req.reviews %}
+                <summary>{{ req.reviews | length }} missing reviews</summary>
+                <ul>
+                  {% for review in req.reviews %}
+                    <li>
+                      {{ req.id }}
+                      {% if review.by_user %}by user {{ review.by_user }}{% endif %}
+                      {% if review.by_group %}by group {{ review.by_group }}{% endif %}
+                      {% if review.by_package %}by package {{ review.by_package }}{% endif %}
+                      {% if review.by_project %}by project {{ review.by_project }}{% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% endfor %}
+          {% endif %}-->
+
+        </td>
+        <td class="problems">
+
+          {% if project.checks %}
+            {% set failed_checks = project.checks | selectattr("state", "ne", "success") | list %}
+            {% if failed_checks %}
+              <ul>
+                {% for check in failed_checks %}
+                  {% if check.url %}
+                    <li>
+                      <a href="{{ check.url }}" target="_blank">{{ check.name }} - {{ check.state }}</a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+              </ul>
+            {% endif %}
+          {% endif %}
+
+          {% if project.broken_packages %}
+            <ul>
+              {% for package in project.broken_packages %}
+                <li>
+                  {{ package.package }} — {{ package.arch }}
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          {% if project.building_repositories %}
+          <details>
+            <summary>Building Repositories</summary>
+            <ul>
+              {% for repo in project.building_repositories %}
+              <li>
+                Repo: {{ repo.name }} ({{ repo.arch }}) —
+                State: {{ repo.state }} —
+                To build: {{ repo.to_build }}
+              </li>
+              {% endfor %}
+            </ul>
+          </details>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Optional FontAwesome for icons -->
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.7/jquery.timeago.min.js" integrity="sha256-0+5OfvOxkLHqpLPPwy9pDjug8N3cwaqcmleaxnR5VS8=" crossorigin="anonymous"></script>
+<script>
+  jQuery(document).ready(function() {
+    jQuery("time.timeago").timeago();
+  });
+</script>
+</body>
+
+</html>
