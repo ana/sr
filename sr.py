@@ -317,14 +317,17 @@ def generate_request(apiurl="https://api.opensuse.org", request_id="1", theme="l
     root = fetch_xml("POST", f"{apiurl}/request/{request_id}?cmd=diff&view=xml&withissues=1")
     parse_request_diff_and_issues_xml(req, root)
 
-    # Get build information
-    if req.staging:
-        root = fetch_xml("GET", f"{apiurl}/build/{req.staging}/_result")
-    else:
-        # When SR is accepted or not staged, use source project
-        root = fetch_xml("GET", f"{apiurl}/build/{req.action["source_project"]}/_result")
+    try:
+        # Get build information
+        if req.staging:
+            root = fetch_xml("GET", f"{apiurl}/build/{req.staging}/_result")
+        else:
+            # When SR is accepted or not staged, use source project
+            root = fetch_xml("GET", f"{apiurl}/build/{req.action["source_project"]}/_result")
+        parse_results_xml(req, root)
+    except:
+        pass
 
-    parse_results_xml(req, root)
 
     env = Environment(loader=FileSystemLoader(templates_dir), autoescape=True)
     template = env.get_template("request.html")
