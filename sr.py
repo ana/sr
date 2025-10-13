@@ -86,6 +86,7 @@ def parse_request_xml(req, root):
             "created_utc": datetime.fromisoformat(
                 state_elem.attrib.get("created")
             ).replace(tzinfo=timezone.utc),
+            "superseded_by": state_elem.attrib.get("superseded_by"),
             "comment": state_elem.findtext("comment", default=""),
         }
 
